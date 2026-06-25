@@ -35,4 +35,16 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+<!-- ------------------------------------------------------------------------------------------------------------------------------------------ -->
+
 & "C:\Program Files\Git\cmd\git.exe" add . && & "C:\Program Files\Git\cmd\git.exe" commit -m "Implement DESIGNATURE Studio Workspace & AI Render Pipeline" && & "C:\Program Files\Git\cmd\git.exe" push origin main
+
+& "C:\Program Files\Git\cmd\git.exe" add .
+
+& "C:\Program Files\Git\cmd\git.exe" commit -m "Implement DESIGNATURE Studio Workspace & AI Render Pipeline"
+
+& "C:\Program Files\Git\cmd\git.exe" push origin main
+
+& "C:\Program Files\Git\cmd\git.exe" pull origin main --allow-unrelated-histories --no-edit
+
+& "C:\Program Files\Git\cmd\git.exe" push origin main --force

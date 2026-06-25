@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
-import { Mail, Lock, Globe, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, Globe, ArrowRight, Loader2, User } from "lucide-react";
 
 export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -42,6 +43,9 @@ export default function AuthForm() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              full_name: name,
+            }
           }
         });
 
@@ -82,6 +86,19 @@ export default function AuthForm() {
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
           <div className="space-y-2">
+            {mode === "signup" && (
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-velvet/40" />
+                <input
+                  type="text"
+                  placeholder="Full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required={mode === "signup"}
+                  className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white/50 border border-velvet/10 focus:border-violet-500/50 outline-none transition-all text-sm"
+                />
+              </div>
+            )}
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-velvet/40" />
               <input
