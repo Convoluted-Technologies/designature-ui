@@ -5,17 +5,35 @@ import { ArrowLeft, User, Share2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { motion } from "framer-motion";
+import { useSearchParams } from "next/navigation";
 
 export default function TopBar() {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("Design Canvas");
+  const [projectName, setProjectName] = useState("Untitled Project_01");
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
+  const templateName = searchParams.get("template");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
     });
-  }, [supabase]);
+
+    if (projectId) {
+      const storedProjects = localStorage.getItem("designature_projects");
+      if (storedProjects) {
+        const projects = JSON.parse(storedProjects);
+        const matchingProject = projects.find((p: any) => p.id === projectId);
+        if (matchingProject) {
+          setProjectName(matchingProject.name);
+        }
+      }
+    } else if (templateName) {
+      setProjectName(`Creative ${templateName} Project`);
+    }
+  }, [supabase, projectId, templateName]);
 
   const tabs = ["Design Canvas", "Pattern Draft", "Client Preview"];
 
@@ -23,7 +41,7 @@ export default function TopBar() {
     <header className="h-16 w-full border-b border-white/5 bg-neutral-900/60 backdrop-blur-xl flex items-center justify-between px-6 z-40 relative">
       <div className="flex items-center gap-6">
         <Link 
-          href="/" 
+          href="/dashboard" 
           className="p-2 hover:bg-white/5 rounded-full transition-colors group"
         >
           <ArrowLeft className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
@@ -33,7 +51,7 @@ export default function TopBar() {
             DESIGNATURE <span className="text-zinc-500 font-medium">//</span> 
             <span className="text-violet-400">STUDIO</span>
           </h1>
-          <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">Untitled Project_01</span>
+          <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">{projectName}</span>
         </div>
       </div>
 
