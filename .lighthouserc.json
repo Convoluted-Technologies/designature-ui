@@ -4,7 +4,7 @@
             "startServerCommand": "npm run start",
             "startServerReadyPattern": "Ready",
             "url": [
-                "http://localhost:3000/",
+                "http://localhost:3000/webpage",
                 "http://localhost:3000/workspace"
             ],
             "numberOfRuns": 3

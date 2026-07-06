@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test'
 
-test('landing page renders with Enter Studio CTA', async ({ page }) => {
+test('root redirects to the landing page', async ({ page }) => {
     await page.goto('/')
+    await expect(page).toHaveURL(/\/webpage$/)
+})
+
+test('landing page renders with Enter Studio CTA', async ({ page }) => {
+    await page.goto('/webpage')
     // Navbar's button is display:none below the sm breakpoint; Hero's is always visible.
     await expect(
         page.getByRole('button', { name: 'Enter Studio' }).filter({ visible: true }).first()
@@ -9,7 +14,7 @@ test('landing page renders with Enter Studio CTA', async ({ page }) => {
 })
 
 test('auth modal opens with Google and email sign-in', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/webpage')
     await page
         .getByRole('button', { name: 'Enter Studio' })
         .filter({ visible: true })
