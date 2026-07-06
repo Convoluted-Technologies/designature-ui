@@ -21,7 +21,7 @@ export default function AuthForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/workspace`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
 
@@ -55,7 +55,7 @@ export default function AuthForm() {
       if (mode === "signup") {
         setMessage({ type: "success", text: "Check your email for the confirmation link." });
       } else {
-        window.location.href = "/workspace";
+        window.location.href = "/dashboard";
       }
     }
     setIsLoading(false);

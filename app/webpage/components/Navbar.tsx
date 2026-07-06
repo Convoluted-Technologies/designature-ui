@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import Logo from "../public/Logo.png"
+import Logo from "@/public/Logo.png"
 import Image from "next/image";
 
 

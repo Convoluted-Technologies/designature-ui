@@ -8,9 +8,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-playfair);
+  --font-cinzel: var(--font-cinzel);
 
   --color-cream: #FBF9F6;
   --color-velvet: #2A1B3D;
@@ -27,7 +28,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), var(--font-geist-sans), Arial, Helvetica, sans-serif;
   scroll-behavior: smooth;
   overflow-x: hidden;
 }

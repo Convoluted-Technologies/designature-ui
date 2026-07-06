@@ -10,9 +10,10 @@ interface CanvasProps {
   activeTemplate: string;
   activeFabric: string | null;
   renderStatus: RenderStatus;
+  sketchUrl?: string | null;
 }
 
-export default function Canvas({ activeTemplate, activeFabric, renderStatus }: CanvasProps) {
+export default function Canvas({ activeTemplate, activeFabric, renderStatus, sketchUrl }: CanvasProps) {
   const [zoom, setZoom] = useState(1);
   const [tool, setTool] = useState("Pointer");
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -58,12 +59,20 @@ export default function Canvas({ activeTemplate, activeFabric, renderStatus }: C
           <div className="relative w-[80%] h-[80%] border border-violet-500/20 rounded-3xl flex items-center justify-center overflow-hidden">
              <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-full h-full p-12 flex items-center justify-center">
-                  {/* Placeholder for the Generated Silhouette */}
-                  <img 
-                    src="/brain/0f6309c4-727f-494e-aec5-40af47674ce5/fashion_silhouette_presets_1782147065744.png" 
-                    alt="Active Silhouette"
-                    className="w-full h-full object-contain opacity-80 mix-blend-screen"
-                  />
+                   {/* Placeholder for the Generated Silhouette or Custom Sketch */}
+                   {sketchUrl ? (
+                     <img 
+                       src={sketchUrl} 
+                       alt="Active Sketch"
+                       className="w-full h-full object-contain opacity-90"
+                     />
+                   ) : (
+                     <img 
+                       src="/brain/0f6309c4-727f-494e-aec5-40af47674ce5/fashion_silhouette_presets_1782147065744.png" 
+                       alt="Active Silhouette"
+                       className="w-full h-full object-contain opacity-80 mix-blend-screen"
+                     />
+                   )}
                 </div>
              </div>
 
