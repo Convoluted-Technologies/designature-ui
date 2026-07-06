@@ -1,0 +1,49 @@
+name: Live CI
+
+# Same pipeline as Main CI but sourced from the "live" GitHub Environment —
+# what works on main is re-verified with live's real configuration before
+# Render deploys it to clients.
+on:
+  push:
+    branches: [live]
+  pull_request:
+    branches: [live]
+
+concurrency:
+  group: live-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      environment: live
+    secrets: inherit
+
+  # Gates main -> live promotion PRs: fails if the live environment is missing
+  # any variable or secret that exists in main. Requires a fine-grained PAT
+  # (Environments/Secrets/Variables read) stored as repo secret ENV_PARITY_TOKEN.
+  env-parity:
+    name: live env has everything main has
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Compare environment variable and secret names
+        env:
+          GH_TOKEN: ${{ secrets.ENV_PARITY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::ENV_PARITY_TOKEN not configured; skipping parity check (assert-env.mjs in the build remains the hard gate)."
+            exit 0
+          fi
+          for kind in variables secrets; do
+            main_names=$(gh api "repos/${{ github.repository }}/environments/main/$kind" --jq ".$kind[].name" | sort)
+            live_names=$(gh api "repos/${{ github.repository }}/environments/live/$kind" --jq ".$kind[].name" | sort)
+            missing=$(comm -23 <(echo "$main_names") <(echo "$live_names"))
+            if [ -n "$missing" ]; then
+              echo "::error::live environment is missing $kind present in main: $missing"
+              exit 1
+            fi
+          done
+          echo "live environment has all variables and secrets that main has."

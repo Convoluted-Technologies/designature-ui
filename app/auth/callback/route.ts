@@ -8,18 +8,12 @@ export async function GET(request: Request) {
     // next determines where to redirect the user after a successful login
     const next = searchParams.get('next') ?? '/'
 
-    if (code) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (code && supabaseUrl && supabaseKey) {
         const cookieStore = await cookies()
-        let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        
-        if (!supabaseUrl || supabaseUrl.includes("your_supabase_project_url") || !supabaseUrl.startsWith("http")) {
-            supabaseUrl = "https://placeholder-project.supabase.co"
-        }
-        if (!supabaseKey || supabaseKey.includes("your_supabase_anon_key")) {
-            supabaseKey = "placeholder-key"
-        }
-        
+
         const supabase = createServerClient(
             supabaseUrl,
             supabaseKey,

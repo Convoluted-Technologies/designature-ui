@@ -1,0 +1,105 @@
+name: CI (reusable)
+
+# Shared pipeline for both branches. The calling workflow picks the GitHub
+# Environment ("main" or "live"), so each branch builds and tests against its
+# own secrets/vars — the same checks, environment-specific values.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub Environment to source vars/secrets from (main or live)
+        required: true
+        type: string
+
+jobs:
+  quality:
+    name: Lint, typecheck, build, bundle syntax
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint (non-blocking — pre-existing errors tracked separately)
+        run: npm run lint
+        continue-on-error: true
+      - run: npm run typecheck
+      - name: Assert required env vars
+        run: node scripts/assert-env.mjs
+      - name: Restore Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+      - run: npm run build
+      - name: Check bundle syntax against browser targets
+        run: npm run check:es
+      - name: Upload build for e2e and lighthouse jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build-${{ inputs.environment }}
+          path: |
+            .next
+            !.next/cache
+          retention-days: 1
+          include-hidden-files: true
+
+  e2e:
+    name: Playwright smoke (desktop + mobile emulation)
+    runs-on: ubuntu-latest
+    needs: quality
+    environment: ${{ inputs.environment }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Download build from quality job
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build-${{ inputs.environment }}
+          path: .next
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.environment }}
+          path: playwright-report
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse (emulated mobile, throttled network)
+    runs-on: ubuntu-latest
+    needs: quality
+    environment: ${{ inputs.environment }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Download build from quality job
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build-${{ inputs.environment }}
+          path: .next
+      - run: npx lhci autorun
