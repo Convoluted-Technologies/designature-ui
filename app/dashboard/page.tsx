@@ -38,6 +38,7 @@ import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Logo from "@/public/Logo.png";
+import { syncUserWithBackend } from "@/lib/api";
 
 interface Project {
   id: string;
@@ -138,6 +139,10 @@ export default function DashboardPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUser(user);
+        
+        // Trigger User Sync with FastAPI Backend
+        syncUserWithBackend();
+
         const defaultName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Designer Studio";
 
         const storedProfile = localStorage.getItem("designature_user_profile");

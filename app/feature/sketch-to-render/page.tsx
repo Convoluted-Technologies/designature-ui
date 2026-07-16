@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -31,6 +32,7 @@ interface Project {
   lastModified: string;
   previewColor?: string;
   sketchUrl?: string;
+  segments?: any[];
 }
 
 export default function SketchToRenderPage() {
@@ -92,7 +94,7 @@ export default function SketchToRenderPage() {
     if (file.type.startsWith("image/")) {
       reader.readAsDataURL(file);
     } else if (file.type === "application/pdf") {
-      setUploadedFileBase64("/brain/0f6309c4-727f-494e-aec5-40af47674ce5/fashion_silhouette_presets_1782147065744.png");
+      setUploadedFileBase64("/presets/fashion_silhouette_presets_1782147065744.png");
     }
   };
 
@@ -114,73 +116,102 @@ export default function SketchToRenderPage() {
     }
   };
 
-  const startSketchRenderingPipeline = () => {
+  const startSketchRenderingPipeline = async () => {
     if (!uploadedFile) return;
 
     setIsProcessing(true);
-    setProcessingProgress(0);
-    setProcessingStage(0);
+    setProcessingProgress(10);
+    setProcessingStage(1);
     setProcessingLogs(["Initializing sketch synthesis engine..."]);
 
-    const logs = [
-      "[1/4] Decoding vector lines and drawing coordinates... OK",
-      "[2/4] Detecting silhouette contours & style markers... DONE",
-      "[3/4] Running volumetric mesh synthesis mapping... COMPLETE",
-      "[4/4] Generating high-fidelity workspace deck layers... READY"
-    ];
-
-    let currentStage = 0;
-
-    const interval = setInterval(() => {
-      currentStage++;
-      setProcessingStage(currentStage);
-      setProcessingProgress((currentStage / 4) * 100);
-
-      if (currentStage <= 4) {
-        setProcessingLogs(prev => [...prev, logs[currentStage - 1]]);
-      }
-
-      if (currentStage === 4) {
-        clearInterval(interval);
-
+    // Helper to simulate intermediate progress logs
+    const addLogWithDelay = (log: string, progress: number, delayMs: number) => {
+      return new Promise<void>((resolve) => {
         setTimeout(() => {
-          const colors = [
-            "bg-purple-100 text-purple-600",
-            "bg-rose-100 text-rose-600",
-            "bg-amber-100 text-amber-600",
-            "bg-teal-100 text-teal-600",
-            "bg-blue-100 text-blue-600"
-          ];
-          const pickedColor = colors[Math.floor(Math.random() * colors.length)];
-          const isPdf = uploadedFile.type === "application/pdf";
+          setProcessingLogs(prev => [...prev, log]);
+          setProcessingProgress(progress);
+          resolve();
+        }, delayMs);
+      });
+    };
 
-          const newProject: Project = {
-            id: "proj_sketch_" + Date.now(),
-            name: uploadedFile.name.replace(/\.[^/.]+$/, "") + " Render",
-            template: isPdf ? "PDF Sketch" : "Image Sketch",
-            fabric: "Silk",
-            lastModified: new Date().toISOString().split("T")[0],
-            previewColor: pickedColor,
-            sketchUrl: uploadedFileBase64 || undefined
-          };
+    try {
+      await addLogWithDelay("[1/4] Decoding vector lines and drawing coordinates... OK", 30, 400);
 
-          const stored = localStorage.getItem("designature_projects");
-          let currentProjectsList = stored ? JSON.parse(stored) : [];
-          const updatedProjects = [newProject, ...currentProjectsList];
-          setProjects(updatedProjects);
-          localStorage.setItem("designature_projects", JSON.stringify(updatedProjects));
-
-          setUploadedFile(null);
-          setUploadedFileBase64(null);
-          setIsProcessing(false);
-
-          router.push(`/workspace?projectId=${newProject.id}&template=${newProject.template}`);
-        }, 800);
+      // Fetch Supabase session JWT
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
       }
-    }, 700);
+
+      // Hit our newly created processing API endpoint
+      const response = await fetch("/api/process-sketch", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          sketchUrl: uploadedFileBase64,
+          template: uploadedFile.name.toLowerCase().includes("skirt") ? "Skirt" : "Gown"
+        })
+      });
+
+      await addLogWithDelay("[2/4] Detecting silhouette contours & style markers... DONE", 60, 300);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to process sketch");
+      }
+
+      await addLogWithDelay("[3/4] Running volumetric mesh synthesis mapping... COMPLETE", 85, 300);
+      await addLogWithDelay("[4/4] Generating high-fidelity workspace deck layers... READY", 100, 300);
+
+      // Save to localStorage
+      const colors = [
+        "bg-purple-100 text-purple-600",
+        "bg-rose-100 text-rose-600",
+        "bg-amber-100 text-amber-600",
+        "bg-teal-100 text-teal-600",
+        "bg-blue-100 text-blue-600"
+      ];
+      const pickedColor = colors[Math.floor(Math.random() * colors.length)];
+      
+      const newProject: Project = {
+        id: result.projectId || "proj_sketch_" + Date.now(),
+        name: uploadedFile.name.replace(/\.[^/.]+$/, "") + " Render",
+        template: result.templateName || "Gown",
+        fabric: "Silk",
+        lastModified: new Date().toISOString().split("T")[0],
+        previewColor: pickedColor,
+        sketchUrl: uploadedFileBase64 || undefined,
+        segments: result.segments
+      };
+
+      const stored = localStorage.getItem("designature_projects");
+      let currentProjectsList = stored ? JSON.parse(stored) : [];
+      const updatedProjects = [newProject, ...currentProjectsList];
+      setProjects(updatedProjects);
+      localStorage.setItem("designature_projects", JSON.stringify(updatedProjects));
+
+      // Reset states
+      setUploadedFile(null);
+      setUploadedFileBase64(null);
+      setIsProcessing(false);
+
+      router.push(`/workspace?projectId=${newProject.id}&template=${newProject.template}`);
+    } catch (err: any) {
+      setProcessingLogs(prev => [...prev, `[ERROR] Pipeline failed: ${err.message}`]);
+      setTimeout(() => {
+        setIsProcessing(false);
+      }, 1500);
+    }
   };
 
-  const handleCreateFreshSketch = () => {
+  const handleCreateFreshSketch = async () => {
     const colors = [
       "bg-purple-100 text-purple-650",
       "bg-rose-100 text-rose-650",
@@ -189,13 +220,38 @@ export default function SketchToRenderPage() {
       "bg-blue-100 text-blue-650"
     ];
     const pickedColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Fetch default segments for client side Gown preview
+    let defaultSegments = [];
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
+      const res = await fetch("/api/process-sketch", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ template: "Gown" })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        defaultSegments = data.segments || [];
+      }
+    } catch (e) {
+      console.warn("Failed to pre-fetch default gown segments:", e);
+    }
+
     const newProject: Project = {
       id: "proj_fresh_" + Date.now(),
       name: `Couture Sketch ${projects.length + 1}`,
       template: "Gown",
       fabric: "Silk",
       lastModified: new Date().toISOString().split("T")[0],
-      previewColor: pickedColor
+      previewColor: pickedColor,
+      segments: defaultSegments
     };
 
     const stored = localStorage.getItem("designature_projects");
