@@ -636,10 +636,51 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          <div className="p-4 flex flex-col justify-between flex-1 bg-white min-w-0">
-                            <h4 className="text-base font-extrabold text-zinc-950 truncate group-hover:text-violet-600 transition-colors font-sans">{project.name}</h4>
+                          <div className="p-4 flex flex-col justify-between flex-1 gap-2 bg-white min-w-0">
+                            {renamingProjectId === project.id ? (
+                              <div className="flex items-center gap-1 mt-1 z-20">
+                                <input
+                                  type="text"
+                                  value={renameValue}
+                                  onChange={(e) => setRenameValue(e.target.value)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 bg-zinc-50 border border-zinc-305 rounded px-2 py-0.5 text-xs text-zinc-800 outline-none min-w-0"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={(e) => saveRenameProject(project.id, e)}
+                                  className="p-1 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-350 text-emerald-700 transition shrink-0"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={cancelRename}
+                                  className="p-1 rounded bg-rose-50 hover:bg-rose-100 border border-rose-350 text-rose-700 transition shrink-0"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex justify-between items-start gap-2 min-w-0">
+                                <h4 className="text-base font-extrabold text-zinc-950 truncate group-hover:text-violet-605 transition-colors uppercase font-sans min-w-0 flex-1">{project.name}</h4>
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                  <button
+                                    onClick={(e) => startRenameProject(project, e)}
+                                    className="p-1 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition cursor-pointer"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => deleteProject(project.id, e)}
+                                    className="p-1 rounded hover:bg-red-50 text-zinc-400 hover:text-red-650 transition cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                             <div className="flex flex-wrap justify-between items-center gap-1.5 mt-2.5 pt-2 border-t border-zinc-100">
-                              <span className="text-xs font-bold text-zinc-600 uppercase truncate max-w-[130px]">{project.template}</span>
+                              <span className="text-xs font-bold text-zinc-650 bg-zinc-100 px-2 py-0.5 rounded uppercase tracking-wider truncate max-w-[130px]">{project.template}</span>
                               <span className="text-xs text-zinc-500 font-medium shrink-0">{project.lastModified}</span>
                             </div>
                           </div>
