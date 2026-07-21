@@ -116,6 +116,16 @@ export default function SketchToRenderPage() {
     }
   };
 
+  const detectTemplate = (fileName: string): string => {
+    const name = fileName.toLowerCase();
+    if (name.includes("mint") && name.includes("gown")) return "Mint Gown";
+    if (name.includes("asymmetric") || name.includes("suit")) return "Asymmetric Suit";
+    if (name.includes("yellow") || name.includes("peplum")) return "Yellow Peplum";
+    if (name.includes("orange") || name.includes("column")) return "Orange Column Gown";
+    if (name.includes("skirt")) return "Skirt";
+    return "Gown";
+  };
+
   const startSketchRenderingPipeline = async () => {
     if (!uploadedFile) return;
 
@@ -146,13 +156,15 @@ export default function SketchToRenderPage() {
         headers["Authorization"] = `Bearer ${session.access_token}`;
       }
 
+      const detectedTemplate = detectTemplate(uploadedFile.name);
+
       // Hit our newly created processing API endpoint
       const response = await fetch("/api/process-sketch", {
         method: "POST",
         headers,
         body: JSON.stringify({
           sketchUrl: uploadedFileBase64,
-          template: uploadedFile.name.toLowerCase().includes("skirt") ? "Skirt" : "Gown"
+          template: detectedTemplate
         })
       });
 
