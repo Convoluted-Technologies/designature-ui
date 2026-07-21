@@ -301,20 +301,7 @@ export default function Canvas({
             </div>
           </div>
 
-          {/* User Drawing Backing */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.18]">
-            {sketchUrl ? (
-              <img src={sketchUrl} alt="Backing Outline" className="w-[88%] h-[88%] object-contain mix-blend-multiply" />
-            ) : (
-              <img 
-                src="/presets/fashion_silhouette_presets_1782147065744.png" 
-                alt="Active Silhouette"
-                className="w-[88%] h-[88%] object-contain mix-blend-multiply"
-              />
-            )}
-          </div>
-
-          {/* Interactive SVG Canvas Layer */}
+          {/* Interactive SVG Canvas Layer — full viewport */}
           <div className="relative w-[88%] h-[88%] flex items-center justify-center">
             <svg 
               viewBox="0 0 400 500" 
@@ -322,6 +309,19 @@ export default function Canvas({
               onMouseDown={handleSvgMouseDown}
               onMouseMove={handleSvgMouseMove}
             >
+              {/* If backend returned a processed sketch, embed it as the base SVG image */}
+              {sketchUrl && (
+                <image
+                  href={sketchUrl}
+                  x="0"
+                  y="0"
+                  width="400"
+                  height="500"
+                  preserveAspectRatio="xMidYMid meet"
+                  style={{ opacity: 0.92 }}
+                />
+              )}
+
               <defs>
                 {/* Patterns used to map fabrics overlay coordinates */}
                 <pattern id="pat_silk" width="80" height="80" patternUnits="userSpaceOnUse">
@@ -351,7 +351,7 @@ export default function Canvas({
                 ))}
               </defs>
 
-              {/* Vector Layers */}
+              {/* Vector Layers — rendered on top of sketch image */}
               {segments.map((seg) => {
                 if (seg.id === "freehand_drawings") return null;
 
