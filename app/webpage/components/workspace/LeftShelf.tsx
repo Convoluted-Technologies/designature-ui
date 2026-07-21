@@ -13,6 +13,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface CustomFabric {
+  name: string;
+  dataUrl: string;
+}
+
 interface ShelfProps {
   activeTemplate: string;
   setActiveTemplate: (t: string) => void;
@@ -22,6 +27,8 @@ interface ShelfProps {
   setSegments: (segs: any[]) => void;
   selectedSegmentId: string | null;
   setSelectedSegmentId: (id: string | null) => void;
+  customFabrics?: CustomFabric[];
+  setCustomFabrics?: (fabs: CustomFabric[]) => void;
 }
 
 export default function LeftShelf({ 
@@ -32,7 +39,9 @@ export default function LeftShelf({
   segments = [],
   setSegments,
   selectedSegmentId,
-  setSelectedSegmentId
+  setSelectedSegmentId,
+  customFabrics = [],
+  setCustomFabrics = () => {}
 }: ShelfProps) {
   const [openTab, setOpenTab] = useState<string | null>("design");
 
@@ -99,7 +108,7 @@ export default function LeftShelf({
                           : "bg-velvet/5 border-velvet/10 text-zinc-650 hover:bg-velvet/10 hover:text-velvet"
                       )}
                     >
-                      <span>{seg.label}</span>
+                      <span className="truncate max-w-[120px]">{seg.label}</span>
                       <div className="flex items-center gap-2">
                         {seg.fabric && (
                           <span className="text-[8px] bg-violet-650/20 text-violet-750 px-1 py-0.5 rounded tracking-wide font-medium">
@@ -108,7 +117,7 @@ export default function LeftShelf({
                         )}
                         <div 
                           className="w-3.5 h-3.5 rounded-full border border-velvet/10 shadow-inner" 
-                          style={{ backgroundColor: seg.fill || seg.defaultFill }}
+                          style={{ backgroundColor: seg.id === "freehand_drawings" ? "transparent" : (seg.fill || seg.defaultFill) }}
                         />
                       </div>
                     </div>
@@ -162,7 +171,7 @@ export default function LeftShelf({
           </div>
 
           {/* Color Palletes (Click to Fill Selected Layer) */}
-          {selectedSegment && (
+          {selectedSegment && selectedSegment.id !== "freehand_drawings" && (
             <div className="space-y-2 pt-2">
               <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest block font-sans">Palette Injector</span>
               <div className="flex flex-wrap gap-1.5">
@@ -182,31 +191,70 @@ export default function LeftShelf({
           )}
 
           {/* Fabric Library */}
-          <div className="space-y-2">
-            <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest block font-sans">Fabric Library</span>
-            <div className="grid grid-cols-3 gap-2">
-              {["Silk", "Lace", "Ankara", "Velvet", "Satin", "Cotton"].map((f) => {
-                const isActive = selectedSegment 
-                  ? selectedSegment.fabric === f 
-                  : activeFabric === f;
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest block font-sans">Fabric Library</span>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  ...["Silk", "Lace", "Ankara", "Velvet", "Satin", "Cotton"],
+                  ...customFabrics.map((f) => f.name)
+                ].map((f) => {
+                  const isActive = selectedSegment 
+                    ? selectedSegment.fabric === f 
+                    : activeFabric === f;
 
-                return (
-                  <button
-                    key={f}
-                    onClick={() => handleSelectFabric(f)}
-                    className={cn(
-                      "aspect-square rounded-lg border transition-all relative overflow-hidden group cursor-pointer",
-                      isActive ? "border-violet-600 ring-2 ring-violet-600" : "border-velvet/10 rgb(0 0 0 / 5%)"
-                    )}
-                  >
-                    <div className="w-full h-full bg-zinc-200 group-hover:scale-110 transition-transform" />
-                    <span className="absolute bottom-1 left-1 right-1 text-[8px] font-extrabold bg-velvet/90 px-1 rounded uppercase tracking-wider text-center text-cream">
-                      {f}
-                    </span>
-                  </button>
-                );
-              })}
+                  const customFabRef = customFabrics.find(cf => cf.name === f);
+                  const previewUrl = customFabRef ? customFabRef.dataUrl : "/presets/fabric_texture_samples_1782147104328.png";
+
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => handleSelectFabric(f)}
+                      className={cn(
+                        "aspect-square rounded-lg border transition-all relative overflow-hidden group cursor-pointer",
+                        isActive ? "border-violet-600 ring-2 ring-violet-600" : "border-velvet/10 bg-velvet/5"
+                      )}
+                    >
+                      <img src={previewUrl} alt={f} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                      <span className="absolute bottom-1 left-1 right-1 text-[8px] font-extrabold bg-velvet/90 px-1 rounded uppercase tracking-wider text-center text-cream truncate">
+                        {f}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Custom Pattern Upload Slot */}
+            {selectedSegment && selectedSegment.id !== "freehand_drawings" && (
+              <div className="pt-2 border-t border-velvet/5">
+                <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest block font-sans mb-2">Upload Attire Fabric</span>
+                <label className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-velvet/15 bg-velvet/2 cursor-pointer hover:bg-velvet/5 hover:border-violet-500/20 transition-all text-center">
+                  <span className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider font-sans">Import Image</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const rawName = file.name.split(".")[0];
+                          const cleanName = rawName.substring(0, 10).replace(/[^a-zA-Z0-9]/g, "");
+                          const newFabric = {
+                            name: cleanName || "Custom",
+                            dataUrl: reader.result as string
+                          };
+                          setCustomFabrics([...customFabrics, newFabric]);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            )}
           </div>
         </div>
       )

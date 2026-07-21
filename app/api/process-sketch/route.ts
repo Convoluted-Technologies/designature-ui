@@ -121,6 +121,182 @@ const DEFAULT_SKIRT_SEGMENTS = [
   }
 ];
 
+const DEFAULT_MINT_GOWN = [
+  {
+    id: "seg_collar",
+    label: "Frill Ruffled Neck",
+    points: [
+      { x: 150, y: 140 },
+      { x: 250, y: 140 },
+      { x: 240, y: 160 },
+      { x: 160, y: 160 }
+    ],
+    svg_path: "M 150 140 L 250 140 L 240 160 L 160 160 Z",
+    z_index: 3,
+    defaultFill: "#e6f4ea"
+  },
+  {
+    id: "seg_bodice",
+    label: "Fitted Bodice",
+    points: [
+      { x: 160, y: 160 },
+      { x: 240, y: 160 },
+      { x: 230, y: 260 },
+      { x: 170, y: 260 }
+    ],
+    svg_path: "M 160 160 L 240 160 L 230 260 L 170 260 Z",
+    z_index: 2,
+    defaultFill: "#d1e7dd"
+  },
+  {
+    id: "seg_skirt",
+    label: "Long Column Skirt",
+    points: [
+      { x: 170, y: 260 },
+      { x: 230, y: 260 },
+      { x: 235, y: 480 },
+      { x: 165, y: 480 }
+    ],
+    svg_path: "M 170 260 L 230 260 L 235 480 L 165 480 Z",
+    z_index: 1,
+    defaultFill: "#a3cfbb"
+  }
+];
+
+const DEFAULT_ASYMMETRIC_SUIT = [
+  {
+    id: "seg_wrap_top",
+    label: "Asymmetric Wrap Top",
+    points: [
+      { x: 150, y: 185 },
+      { x: 250, y: 185 },
+      { x: 230, y: 265 },
+      { x: 170, y: 265 }
+    ],
+    svg_path: "M 150 185 L 250 185 L 230 265 L 170 265 Z",
+    z_index: 2,
+    defaultFill: "#d1ecf1"
+  },
+  {
+    id: "seg_trousers_l",
+    label: "Left Wide Leg Trouser",
+    points: [
+      { x: 170, y: 265 },
+      { x: 200, y: 265 },
+      { x: 180, y: 485 },
+      { x: 130, y: 485 }
+    ],
+    svg_path: "M 170 265 L 200 265 L 180 485 L 130 485 Z",
+    z_index: 1,
+    defaultFill: "#cff4fc"
+  },
+  {
+    id: "seg_trousers_r",
+    label: "Right Wide Leg Trouser",
+    points: [
+      { x: 200, y: 265 },
+      { x: 230, y: 265 },
+      { x: 270, y: 485 },
+      { x: 220, y: 485 }
+    ],
+    svg_path: "M 200 265 L 230 265 L 270 485 L 220 485 Z",
+    z_index: 1,
+    defaultFill: "#cff4fc"
+  }
+];
+
+const DEFAULT_YELLOW_PEPLUM = [
+  {
+    id: "seg_top",
+    label: "Mock Collar Top",
+    points: [
+      { x: 160, y: 160 },
+      { x: 240, y: 160 },
+      { x: 230, y: 260 },
+      { x: 170, y: 260 }
+    ],
+    svg_path: "M 160 160 L 240 160 L 230 260 L 170 260 Z",
+    z_index: 2,
+    defaultFill: "#fff3cd"
+  },
+  {
+    id: "seg_peplum",
+    label: "Waist Peplum Flounce",
+    points: [
+      { x: 170, y: 260 },
+      { x: 230, y: 260 },
+      { x: 250, y: 300 },
+      { x: 150, y: 300 }
+    ],
+    svg_path: "M 170 260 L 230 260 L 250 300 L 150 300 Z",
+    z_index: 3,
+    defaultFill: "#ffe69c"
+  },
+  {
+    id: "seg_skirt",
+    label: "Pencil Skirt Blueprint",
+    points: [
+      { x: 180, y: 300 },
+      { x: 220, y: 300 },
+      { x: 240, y: 485 },
+      { x: 160, y: 485 }
+    ],
+    svg_path: "M 180 300 L 220 300 L 240 485 L 160 485 Z",
+    z_index: 1,
+    defaultFill: "#fff3cd"
+  }
+];
+
+const DEFAULT_ORANGE_COLUMN_GOWN = [
+  {
+    id: "seg_sleeve_l",
+    label: "Puff Balloon Left Sleeve",
+    points: [
+      { x: 140, y: 180 },
+      { x: 110, y: 200, isControl: true },
+      { x: 110, y: 250, isControl: true },
+      { x: 140, y: 270 },
+      { x: 150, y: 250 },
+      { x: 145, y: 220, isControl: true },
+      { x: 145, y: 190, isControl: true },
+      { x: 140, y: 180 }
+    ],
+    svg_path: "M 140 180 C 110 200, 110 250, 140 270 L 150 250 Z",
+    z_index: 2,
+    defaultFill: "#f8d7da"
+  },
+  {
+    id: "seg_sleeve_r",
+    label: "Puff Balloon Right Sleeve",
+    points: [
+      { x: 260, y: 180 },
+      { x: 290, y: 200, isControl: true },
+      { x: 290, y: 250, isControl: true },
+      { x: 260, y: 270 },
+      { x: 250, y: 250 },
+      { x: 255, y: 220, isControl: true },
+      { x: 255, y: 190, isControl: true },
+      { x: 260, y: 180 }
+    ],
+    svg_path: "M 260 180 C 290 200, 290 250, 260 270 L 250 250 Z",
+    z_index: 2,
+    defaultFill: "#f8d7da"
+  },
+  {
+    id: "seg_column_body",
+    label: "Balloon Sleeve Column Body",
+    points: [
+      { x: 150, y: 180 },
+      { x: 250, y: 180 },
+      { x: 235, y: 485 },
+      { x: 165, y: 485 }
+    ],
+    svg_path: "M 150 180 L 250 180 L 235 485 L 165 485 Z",
+    z_index: 1,
+    defaultFill: "#f5c2c7"
+  }
+];
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -165,7 +341,20 @@ export async function POST(request: Request) {
 
     // fallback simulation
     await new Promise((resolve) => setTimeout(resolve, 800));
-    const activeSegments = template?.toLowerCase() === "skirt" ? DEFAULT_SKIRT_SEGMENTS : DEFAULT_GOWN_SEGMENTS;
+    
+    let activeSegments = DEFAULT_GOWN_SEGMENTS;
+    const cleanTemplate = template?.toLowerCase() || "";
+    if (cleanTemplate === "skirt") {
+      activeSegments = DEFAULT_SKIRT_SEGMENTS;
+    } else if (cleanTemplate === "mint gown") {
+      activeSegments = DEFAULT_MINT_GOWN;
+    } else if (cleanTemplate === "asymmetric suit") {
+      activeSegments = DEFAULT_ASYMMETRIC_SUIT;
+    } else if (cleanTemplate === "yellow peplum") {
+      activeSegments = DEFAULT_YELLOW_PEPLUM;
+    } else if (cleanTemplate === "orange column gown") {
+      activeSegments = DEFAULT_ORANGE_COLUMN_GOWN;
+    }
     
     return NextResponse.json({
       success: true,

@@ -21,11 +21,16 @@ function WorkspaceContent() {
   const [activeFabric, setActiveFabric] = useState<string | null>(null);
   const [renderStatus, setRenderStatus] = useState<RenderStatus>("idle");
   const [activeBackground, setActiveBackground] = useState("Studio");
+  const [customFabrics, setCustomFabrics] = useState<Array<{ name: string; dataUrl: string }>>([]);
 
   // Core Vector States
   const [segments, setSegments] = useState<any[]>([]);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
+
+  // Undo/Redo Stacks
+  const [history, setHistory] = useState<any[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   // Load custom project details if selected from local storage
   useEffect(() => {
@@ -44,6 +49,8 @@ function WorkspaceContent() {
             }
             if (project.segments && project.segments.length > 0) {
               setSegments(project.segments);
+              setHistory([project.segments]);
+              setHistoryIndex(0);
             } else {
               // Fetch default segments for this template type
               const supabase = createClient();
@@ -62,6 +69,8 @@ function WorkspaceContent() {
                   .then(data => {
                     if (data.success && data.segments) {
                       setSegments(data.segments);
+                      setHistory([data.segments]);
+                      setHistoryIndex(0);
                       // Update project in localStorage
                       project.segments = data.segments;
                       localStorage.setItem("designature_projects", JSON.stringify(parsed));
@@ -113,9 +122,15 @@ function WorkspaceContent() {
     }
   };
 
-  // Sync segment changes to localStorage
-  const handleUpdateSegments = (updatedSegments: any[]) => {
+  // Sync segment changes to localStorage and push to history
+  const handleUpdateSegments = (updatedSegments: any[], skipHistory = false) => {
     setSegments(updatedSegments);
+    if (!skipHistory) {
+      const nextHistory = history.slice(0, historyIndex + 1);
+      nextHistory.push(updatedSegments);
+      setHistory(nextHistory);
+      setHistoryIndex(nextHistory.length - 1);
+    }
     if (typeof window !== "undefined" && projectId) {
       const stored = localStorage.getItem("designature_projects");
       if (stored) {
@@ -133,6 +148,38 @@ function WorkspaceContent() {
     }
   };
 
+  const undo = () => {
+    if (historyIndex > 0) {
+      const prevIndex = historyIndex - 1;
+      setHistoryIndex(prevIndex);
+      setSegments(history[prevIndex]);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextIndex = historyIndex + 1;
+      setHistoryIndex(nextIndex);
+      setSegments(history[nextIndex]);
+    }
+  };
+
+  // Setup Hotkey Listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [historyIndex, history]);
+
   return (
     <div className="h-screen w-full bg-[#FBF9F6] text-[#2A1B3D] flex flex-col overflow-hidden font-sans">
       {/* Top Bar */}
@@ -149,6 +196,8 @@ function WorkspaceContent() {
           setSegments={handleUpdateSegments}
           selectedSegmentId={selectedSegmentId}
           setSelectedSegmentId={setSelectedSegmentId}
+          customFabrics={customFabrics}
+          setCustomFabrics={setCustomFabrics}
         />
 
         {/* Center Canvas */}
@@ -161,6 +210,11 @@ function WorkspaceContent() {
           setSegments={handleUpdateSegments}
           selectedSegmentId={selectedSegmentId}
           setSelectedSegmentId={setSelectedSegmentId}
+          undo={undo}
+          redo={redo}
+          canUndo={historyIndex > 0}
+          canRedo={historyIndex < history.length - 1}
+          customFabrics={customFabrics}
         />
 
         {/* Right Render Pipeline Panel */}
